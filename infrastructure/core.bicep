@@ -34,6 +34,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
         networkSecurityGroup: {
           id: networkSecurityGroup.id
         }
+        privateEndpointNetworkPolicies: 'disabled'
       }
     }]
   }
@@ -84,9 +85,63 @@ resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
         paths: [
           '/id'
         ]
-        kind: 'Hash'
       }
     }
     options: {}
+  }
+}
+
+resource cosmosPrivateDns 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.documents.azure.com'
+  location: 'global'
+}
+
+resource cosmosPrivateDnsNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
+  name: '${prefix}-cosmos-dns-link'
+  location: 'global'
+  parent: cosmosPrivateDns
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: virtualNetwork.id
+    }
+  }
+}
+
+resource cosmosPrivateEndpoint 'Microsoft.Network/privateEndpoints@2019-04-01' = {
+  name: '${prefix}-cosmos-pe'
+  location: location
+  properties: {
+    privateLinkServiceConnections: [
+      {
+        name: '${prefix}-cosmos-pe'
+        properties: {
+          privateLinkServiceId: cosmosDbAccount.id
+          groupIds: [
+            'SQL'
+          ]
+        }
+      }
+    ]
+    subnet: {
+
+      id: virtualNetwork.properties.subnets[0].id
+    }
+
+  }
+}
+
+resource cosmosPrivateEndpointDnsLink 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2020-03-01' = {
+  name: '${prefix}-cosmos-pe-dns'
+  parent: cosmosPrivateEndpoint
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink.documents.azure.com'
+        properties: {
+          privateDnsZoneId: cosmosPrivateDns.id
+        }
+      }
+    ]
   }
 }
