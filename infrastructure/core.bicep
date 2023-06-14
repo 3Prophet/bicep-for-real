@@ -2,12 +2,20 @@ param location string
 param prefix string
 param vnetSettings object = {
   addressPrefixes: [
-    '10.0.0.0/20'
+    '10.0.0.0/19'
   ]
   subnets: [
     {
       name: 'subnet1'
-      addressPrefix: '10.0.0.0/22'
+      addressPrefix: '10.0.0.0/21'
+    }
+    {
+      name: 'acaAppSubnet'
+      addressPrefix: '10.0.8.0/21'
+    }
+    {
+      name: 'acaControlPlaneSubnet'
+      addressPrefix: '10.0.16.0/21'
     }
   ]
 }
