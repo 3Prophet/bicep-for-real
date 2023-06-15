@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westeurope"
+    },
+    "prefix": {
+      "value": "test-infra"
+    },
+    "vNetId": {
+      "value": "/subscriptions/ce425048-e828-447f-8b02-a17fb80cdcba/resourceGroups/flow-analyzer/providers/Microsoft.Network/virtualNetworks/test-infra-vnet"
+    }
+  }
+}

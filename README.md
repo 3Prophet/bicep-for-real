@@ -3,4 +3,6 @@
 
 az deployment group what-if --resource-group flow-analyzer -n test-infra-depl --template-file .\infrastructure\core.bicep --parameters .\configuragion\dev.json
 
+az deployment group what-if --resource-group flow-analyzer -n test-infra-depl --template-file .\infrastructure\aca.bicep --parameters .\configuragion\dev-aca.json
+
 [Visual subnet calculator](https://www.davidc.net/sites/default/subnets/subnets.html)
