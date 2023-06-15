@@ -24,7 +24,22 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2019-11-0
   name: '${prefix}-default-nsg'
   location: location
   properties: {
-    securityRules: []
+    securityRules: [
+      {
+        name: 'allowhttpsinbound'
+        properties: {
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          description: 'Allow https traffic into API'
+          sourceAddressPrefix: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          destinationAddressPrefix: '*'
+          priority: 200
+        }
+      }
+    ]
   }
 }
 
@@ -92,6 +107,22 @@ resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
       partitionKey: {
         paths: [
           '/id'
+        ]
+      }
+    }
+    options: {}
+  }
+}
+
+resource stateContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
+  parent: sqlDb
+  name: '${prefix}-state'
+  properties: {
+    resource: {
+      id: '${prefix}-state'
+      partitionKey: {
+        paths: [
+          '/partitionKey'
         ]
       }
     }

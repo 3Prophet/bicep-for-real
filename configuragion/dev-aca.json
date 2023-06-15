@@ -10,6 +10,33 @@
     },
     "vNetId": {
       "value": "/subscriptions/ce425048-e828-447f-8b02-a17fb80cdcba/resourceGroups/flow-analyzer/providers/Microsoft.Network/virtualNetworks/test-infra-vnet"
+    },
+    "containerRegistryName": {
+      "value": "lmbddevacr"
+    },
+    "containerRegistryUsername": {
+      "value": "lmbddevacr"
+    },
+    "containerVersion": {
+      "value": "1.6.0"
+    },
+    "cosmosAccountName": {
+      "value": "lmbd-dev-cosmos-account"
+    },
+    "cosmosDbName": {
+      "value": "lmbd-dev-sqldb"
+    },
+    "cosmosContainerName": {
+      "value": "lmbd-dev-state"
+    },
+
+    "containerRegistryPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/469048f1-92af-4c71-a63b-330ec31d2b82/resourceGroups/lambda-api-dev/providers/Microsoft.KeyVault/vaults/lmbd-dev-kv"
+        },
+        "secretName": "acrAdminPassword"
+      }
     }
   }
 }
