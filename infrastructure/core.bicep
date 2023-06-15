@@ -219,3 +219,13 @@ resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
     value: containerRegistry.listCredentials().passwords[0].value
   }
 }
+
+output vNetId string = virtualNetwork.id
+output ContainerRegistryName string = containerRegistry.name
+output ContainerRegistryUsename string = containerRegistry.name
+output SecretKeyVaultName string = keyVault.name
+output ContainerRegistrySecret string = split(keyVaultSecret.name, '/')[0]
+output CosmosAccountName string = cosmosDbAccount.name
+output ComosDbName string = sqlDb.name
+output CosmosStateContainerName string = stateContainerName.name
+output CosmosSqlContainerName string = sqlContainerName.name

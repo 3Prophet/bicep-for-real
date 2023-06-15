@@ -19,14 +19,16 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-10
     }
   }
 }
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2021-03-15' existing = {
+  name: cosmosAccountName
 
-resource env 'Microsoft.Web/kubeEnvironments@2022-09-01' = {
+}
+var cosmosDbKey = cosmosDbAccount.listKeys().primaryMasterKey
+
+resource env 'Microsoft.App/managedEnvironments@2022-01-01-preview' = {
   name: '${prefix}-container-env'
   location: location
-  kind: 'containerenvironment'
   properties: {
-    environmentType: 'managed'
-    internalLoadBalancerEnabled: false
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -34,25 +36,46 @@ resource env 'Microsoft.Web/kubeEnvironments@2022-09-01' = {
         sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
     }
-    containerAppsConfiguration: {
-      appSubnetResourceId: '${vNetId}/subnets/acaAppSubnet'
-      controlPlaneSubnetResourceId: '${vNetId}/subnets/acaControlPlaneSubnet'
+    vnetConfiguration: {
+      runtimeSubnetId: '${vNetId}/subnets/acaAppSubnet'
+      infrastructureSubnetId: '${vNetId}/subnets/acaControlPlaneSubnet'
+    }
+  }
+  resource daprStateStore 'daprComponents@2022-01-01-preview' = {
+    name: 'statestore'
+    properties: {
+      componentType: 'state.azure.cosmosdb'
+      version: 'v1'
+      scopes: [
+        'lambdaapi'
+      ]
+      metadata: [
+        {
+          name: 'url'
+          value: 'https://${cosmosAccountName}.documents.azure.com:443/'
+        }
+        {
+          name: 'database'
+          value: cosmosDbName
+        }
+        {
+          name: 'collection'
+          value: cosmosContainerName
+        }
+        {
+          name: 'masterKey'
+          value: cosmosDbKey
+        }
+      ]
     }
   }
 }
 
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2021-03-15' existing = {
-  name: cosmosAccountName
-}
-
-var cosmosDbKey = cosmosDbAccount.listKeys().primaryMasterKey
-
-resource apiApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
+resource apiApp 'Microsoft.App/containerApps@2022-01-01-preview' = {
   name: '${prefix}-api-container'
   location: location
-  kind: 'containerapp'
   properties: {
-    kubeEnvironmentId: env.id
+    managedEnvironmentId: env.id
     configuration: {
       secrets: [
         {
@@ -71,6 +94,11 @@ resource apiApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
         external: true
         targetPort: 3000
       }
+      dapr: {
+        enabled: true
+        appPort: 3000
+        appId: 'lambdaapi'
+      }
     }
     template: {
       containers: [
@@ -81,42 +109,15 @@ resource apiApp 'Microsoft.App/containerApps@2023-04-01-preview' = {
             cpu: '0.5'
             memory: '1Gi'
           }
-        }
 
+        }
       ]
       scale: {
         minReplicas: 1
       }
-      dapr: {
-        enabled: true
-        appPort: 3000
-        appId: 'lambdaapi'
-        components: [
-          {
-            name: 'statestore'
-            type: 'state.azure.cosmosdb'
-            version: 'v1'
-            metadata: [
-              {
-                name: 'url'
-                value: 'https://${cosmosAccountName}.documents.azure.com:443/'
-              }
-              {
-                name: 'database'
-                value: cosmosDbName
-              }
-              {
-                name: 'collection'
-                value: cosmosContainerName
-              }
-              {
-                name: 'masterKey'
-                value: cosmosDbKey
-              }
-            ]
-          }
-        ]
-      }
     }
   }
+
 }
+
+output apiUrl string = apiApp.properties.configuration.ingress.fqdn
