@@ -180,3 +180,11 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
     }
   }
 }
+
+resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+  name: 'acrAdminPassword'
+  parent: keyVault
+  properties: {
+    value: containerRegistry.listCredentials().passwords[0].value
+  }
+}
